@@ -1,7 +1,6 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const User = require("../model/Users");
-const { findOne } = require("../model/Users");
 
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -12,7 +11,8 @@ exports.login = asyncHandler(async (req, res, next) => {
   if (!user) {
     return next(new ErrorResponse("Invalid Credentials", 401));
   }
-  const isMatch = await user.matchPassword(email);
+  const isMatch = await user.matchPassword(password);
+
   if (!isMatch) {
     return next(new ErrorResponse("Invalid Credentials", 401));
   }
@@ -35,5 +35,24 @@ exports.register = asyncHandler(async (req, res, next) => {
   res.status(201).json({
     success: true,
     token,
+  });
+});
+
+exports.getMe = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+});
+
+exports.updateMe = asyncHandler(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(req.user.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+  res.status(200).json({
+    success: true,
+    data: user,
   });
 });
